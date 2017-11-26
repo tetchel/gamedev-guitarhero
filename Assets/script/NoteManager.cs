@@ -3,39 +3,35 @@ using System.Collections.Generic;
 
 public class NoteManager : MonoBehaviour {
 
-    public GameObject notePrefab;
+    public GameObject greenNotePrefab, redNotePrefab, yellowNotePrefab, blueNotePrefab;
     public float noteSpawnYPos;
 
     private double timeMs;
 
-    private List<Note> notes;       // MUST BE SORTED by their spawn time 
+    private List<Note> notes;               // MUST BE SORTED by their spawn time 
     private IEnumerator<Note> notesEnum;
+    private bool moreNotes = true;
 
     // Use this for initialization
     void Start() {
         timeMs = 0;
 
-        // Load notes somehow
         notes = loadNotes();
 
         notesEnum = notes.GetEnumerator();
-        notesEnum.MoveNext();
+        moreNotes = notesEnum.MoveNext();
     }
 
     // Update is called once per frame
-    void Update() {
+    void FixedUpdate() {
         timeMs += Time.deltaTime * 1000;
+        //Debug.Log("total time " + timeMs + " deltatime " + Time.deltaTime * 1000);
 
         Note current = notesEnum.Current;
-        if(current == null) {
-            Debug.Log("No more notes!");
-        }
-        else {
-            while(current.getSpawnTime() <= timeMs) {
-                spawn(current);
-                notesEnum.MoveNext();
-                current = notesEnum.Current;
-            }
+        while(moreNotes && current != null && current.getSpawnTime() <= timeMs) {
+            spawn(current);
+            moreNotes = notesEnum.MoveNext();
+            current = notesEnum.Current;
         }
     }
 
@@ -51,13 +47,16 @@ public class NoteManager : MonoBehaviour {
         // Then get the indices of any non-empty cells in that row
         // These marked cells are notes to be played at that timestamp
         for(int i = 1; i < contents.GetLength(0); i++) {
+            if(string.IsNullOrEmpty(contents[i, 0])) {
+                // Skip this row if the first cell is blank
+                continue;
+            }
             float timestamp = float.Parse(contents[i, 0]);
             int timestampMs = Mathf.RoundToInt(timestamp * 1000);
 
-            List<int> notesAtThisTime = new List<int>();
             for(int j = 1; j < contents.GetLength(1); j++) {
                 if(!string.IsNullOrEmpty(contents[i, j])) {
-                    Note.NoteColor color = Note.getNoteColor(j - 1);
+                    NoteColor color = Note.getNoteColor(j - 1);
                     workingNotes.Add(new Note(color, timestampMs));
                 } 
             }
@@ -66,10 +65,28 @@ public class NoteManager : MonoBehaviour {
     }
 
     void spawn(Note note) {
-        GameObject spawnNote = Instantiate(notePrefab, 
-            new Vector3(note.getNoteXPos(), noteSpawnYPos, 0), 
-            Quaternion.identity);
+        GameObject fab = getFab(note.getColor());
+        //Debug.Log("Making a fab " + fab.name);
 
-        spawnNote.GetComponent<SpriteRenderer>().color = note.getRenderColor();
+        // GameObject spawnNote =
+        Instantiate(fab);
+    }
+
+    GameObject getFab(NoteColor color) {
+        GameObject fab = null;
+        if (color == NoteColor.GREEN) {
+            fab = greenNotePrefab;
+        }
+        if(color == NoteColor.RED) {
+            fab = redNotePrefab;
+        }
+        if(color == NoteColor.YELLOW) {
+            fab = yellowNotePrefab;
+        }
+        if(color == NoteColor.BLUE) {
+            fab = blueNotePrefab;
+        }
+
+        return fab;
     }
 }

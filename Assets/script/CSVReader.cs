@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using UnityEngine;
 
 public class CSVReader {
     
@@ -17,6 +18,10 @@ public class CSVReader {
 
         for(int i = 0; i < contents.Length; i++) {
             string[] row = contents[i].Split(',');
+            if(row.Length == 0) {
+                Debug.Log("skipping row " + i);
+                continue;
+            }
             for(int j = 0; j < row.Length; j++) {
                 result[i, j] = row[j];
             }
