@@ -1,12 +1,16 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine.Playables;
 
 public class NoteManager : MonoBehaviour {
 
     public GameObject greenNotePrefab, redNotePrefab, yellowNotePrefab, blueNotePrefab;
     public float noteSpawnYPos;
 
-    private double timeMs;
+    public AudioSource musicSource;
+    public float startTime;
+
+    private float timeMs;
 
     private List<Note> notes;               // MUST BE SORTED by their spawn time 
     private IEnumerator<Note> notesEnum;
@@ -14,12 +18,28 @@ public class NoteManager : MonoBehaviour {
 
     // Use this for initialization
     void Start() {
-        timeMs = 0;
+
+        if(startTime != 0) {
+            musicSource.time = startTime;
+        }
+
+        timeMs = startTime * 1000;
+
+        // Losing focus briefly can cause the game and audio to go out of sync
+        Application.runInBackground = true;
 
         notes = loadNotes();
 
         notesEnum = notes.GetEnumerator();
         moreNotes = notesEnum.MoveNext();
+
+        // remove this after testing is done probably
+        bool after = false;
+        while(!after) {
+            notesEnum.MoveNext();
+            after = notesEnum.Current.getSpawnTime() >= timeMs;
+            //Debug.Log("Skip note at " + notesEnum.Current.getSpawnTime());
+        }
     }
 
     // Update is called once per frame
@@ -28,12 +48,18 @@ public class NoteManager : MonoBehaviour {
         //Debug.Log("total time " + timeMs + " deltatime " + Time.deltaTime * 1000);
 
         Note current = notesEnum.Current;
+        if(current == null) {
+            Debug.Log("No more notes!");
+        }
+
         while(moreNotes && current != null && current.getSpawnTime() <= timeMs) {
             spawn(current);
             moreNotes = notesEnum.MoveNext();
             current = notesEnum.Current;
         }
     }
+
+    public double getTime() { return timeMs; }
 
     List<Note> loadNotes() {
         string dcPath = Application.dataPath + "/dani_california.csv";

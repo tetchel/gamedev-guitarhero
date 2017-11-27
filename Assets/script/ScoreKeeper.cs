@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEngine.UI;
 
 public class ScoreKeeper : MonoBehaviour {
@@ -6,6 +7,11 @@ public class ScoreKeeper : MonoBehaviour {
     public Text scoreText;
     public Text streakText;
     public Text multiplierText;
+    public Text timeText;
+
+    public NoteManager noteMan;
+
+    public AudioSource missedNoteAudio;
 
     private static ScoreKeeper _instance;
 
@@ -28,6 +34,10 @@ public class ScoreKeeper : MonoBehaviour {
         updateUI();
     }
 
+    void FixedUpdate() {
+        timeText.text = Math.Round((noteMan.getTime() - Note.spawnToNoteTime) / 1000, 4) + "";
+    }
+
     public static ScoreKeeper instance() {
         return _instance;
     }
@@ -44,7 +54,7 @@ public class ScoreKeeper : MonoBehaviour {
         _streak = 0;
         _notesMissed++;
 
-        GetComponent<AudioSource>().Play();
+        missedNoteAudio.Play();
         updateUI();
     }
 
