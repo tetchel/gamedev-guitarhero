@@ -15,4 +15,16 @@ static class NoteColorMethods {
 
         throw new System.Exception("Invalid NoteColor " + color);
     }
+    
+    // Convert an index to a NoteColor
+    public static NoteColor getNoteColor(this int index) {
+        if      (index == 0) return NoteColor.GREEN;
+        else if (index == 1) return NoteColor.RED;
+        else if (index == 2) return NoteColor.YELLOW;
+        else if (index == 3) return NoteColor.BLUE;
+
+        throw new System.Exception("Invalid note color index " + index);
+    }
+
+
 }

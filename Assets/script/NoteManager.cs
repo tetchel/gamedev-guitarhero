@@ -56,7 +56,7 @@ public class NoteManager : MonoBehaviour {
 
             for(int j = 1; j < contents.GetLength(1); j++) {
                 if(!string.IsNullOrEmpty(contents[i, j])) {
-                    NoteColor color = Note.getNoteColor(j - 1);
+                    NoteColor color = NoteColorMethods.getNoteColor(j - 1);
                     workingNotes.Add(new Note(color, timestampMs));
                 } 
             }

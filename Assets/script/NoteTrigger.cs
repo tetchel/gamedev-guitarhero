@@ -46,6 +46,8 @@ public class NoteTrigger : MonoBehaviour {
             // Nothing further to do if the key is not pressed.
             return;
         }
+
+        //collidingNotes.Clear();
     }
 
     void strum() {
@@ -53,14 +55,20 @@ public class NoteTrigger : MonoBehaviour {
             if(collidingNotes.Count > 0) {
                 GameObject playedNote = collidingNotes[0];
                 collidingNotes.RemoveAt(0);
-                Destroy(playedNote);
-                Debug.Log("Played a note " + name);
-
-                ScoreKeeper.instance().noteHit();
+                if(playedNote != null) {
+                    Destroy(playedNote);
+                    //Debug.Log("Played a note " + name);
+                    ScoreKeeper.instance().noteHit();
+                }
+                else {
+                    // Note already destroyed - Move on to the next one
+                    strum();
+                    //Debug.Log("Tried to play a null note");
+                }
             }
             else {
                 // No colliding notes at this time - a missed note
-                Debug.Log("Nothing to play! " + name);
+                //Debug.Log("Nothing to play! " + name);
                 ScoreKeeper.instance().noteMissed();
             }
         }
@@ -68,17 +76,36 @@ public class NoteTrigger : MonoBehaviour {
 
     private void OnTriggerEnter2D(Collider2D collision) {
         GameObject collidObj = collision.gameObject;
-        if(!collidingNotes.Contains(collidObj)) {
+
+        if(collidObj == null) {
+            // already destroyed
+            return;
+        }
+        if (!collidingNotes.Contains(collidObj)) {
             collidingNotes.Add(collidObj);
         }
-
-        //Debug.Log("A " + name + " collision Enter"); 
     }
 
+    /*
     private void OnTriggerExit2D(Collider2D collision) {
         GameObject collidObj = collision.gameObject;
         collidingNotes.Remove(collidObj);
 
-        //Debug.Log("A " + name + " collision Exit"); 
+        if (name.Contains("green")) {
+            Debug.Log("A " + name + " collision Exit");
+            Debug.Log(listToString(collidingNotes));
+        }
+    }*/
+
+    private string listToString(List<GameObject> list) {
+        string result = "";
+        foreach(GameObject obj in list) {
+            result += obj.name + ' ';
+        }
+        return result;
+    }
+
+    private void OnTriggerStay2D(Collider2D collision) {
+        
     }
 }
