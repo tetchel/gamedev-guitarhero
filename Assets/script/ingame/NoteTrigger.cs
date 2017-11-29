@@ -86,26 +86,11 @@ public class NoteTrigger : MonoBehaviour {
         }
     }
 
-    /*
-    private void OnTriggerExit2D(Collider2D collision) {
-        GameObject collidObj = collision.gameObject;
-        collidingNotes.Remove(collidObj);
-
-        if (name.Contains("green")) {
-            Debug.Log("A " + name + " collision Exit");
-            Debug.Log(listToString(collidingNotes));
-        }
-    }*/
-
     private string listToString(List<GameObject> list) {
         string result = "";
         foreach(GameObject obj in list) {
             result += obj.name + ' ';
         }
         return result;
-    }
-
-    private void OnTriggerStay2D(Collider2D collision) {
-        
     }
 }

@@ -10,7 +10,6 @@ public class CSVReader {
      * Don't put commas or newlines in the data
      * Will only read NUM_COLS cols left-to-right, any further cols are ignored.
      * The first column is to be used to 'comment out' rows by putting anything in it.
-     * Can comment out rows by starting the first item in the row with "#"
      */
     public static string[,] parseCSV(string csvPath) {
         string[] contents = File.ReadAllLines(csvPath);

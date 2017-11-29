@@ -7,7 +7,6 @@ public class ScoreKeeper : MonoBehaviour {
     public Text scoreText;
     public Text streakText;
     public Text multiplierText;
-    public Text timeText;
 
     public NoteManager noteMan;
 
@@ -17,6 +16,7 @@ public class ScoreKeeper : MonoBehaviour {
 
     private int _streak = 0;
     private int _score = 0;
+    private int _longestStreak = 0;
 
     private int _notesHit = 0;
     private int _notesMissed = 0;
@@ -35,7 +35,6 @@ public class ScoreKeeper : MonoBehaviour {
     }
 
     void FixedUpdate() {
-        timeText.text = Math.Round((noteMan.getTime() - Note.spawnToNoteTime) / 1000, 4) + "";
     }
 
     public static ScoreKeeper instance() {
@@ -51,6 +50,9 @@ public class ScoreKeeper : MonoBehaviour {
     }
 
     public void noteMissed() {
+        if(_streak > _longestStreak) {
+            _longestStreak = _streak;
+        }
         _streak = 0;
         _notesMissed++;
 
@@ -77,6 +79,22 @@ public class ScoreKeeper : MonoBehaviour {
         else {
             return 1;
         }
+    }
+
+    public int getNotesHit() {
+        return _notesHit;
+    }
+
+    public int getNotesMissed() {
+        return _notesMissed;
+    }
+
+    public int getLongestStreak() {
+        return _longestStreak;
+    }
+
+    public int getScore() {
+        return _score;
     }
 
     void OnDestroy() {

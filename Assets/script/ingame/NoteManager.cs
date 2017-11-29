@@ -10,6 +10,9 @@ public class NoteManager : MonoBehaviour {
     public AudioSource musicSource;
     public float startTime;
 
+    // Set by the menu when this scene is loaded. Only one NoteManager exists at a time, but this is not enforced yet.
+    public static string songDataPath;
+
     private float timeMs;
 
     private List<Note> notes;               // MUST BE SORTED by their spawn time 
@@ -23,17 +26,22 @@ public class NoteManager : MonoBehaviour {
             musicSource.time = startTime;
         }
 
-        timeMs = startTime * 1000;
+        timeMs = musicSource.time * 1000;
 
         // Losing focus briefly can cause the game and audio to go out of sync
         Application.runInBackground = true;
-
+        
+        // TODO Remove
+        if(songDataPath == null) {
+            songDataPath = "E:/Tim/Programs/Unity/guitarhero/Assets/StreamingAssets/songdata/dani_california.csv";
+        }
         notes = loadNotes();
 
         notesEnum = notes.GetEnumerator();
-        moreNotes = notesEnum.MoveNext();
+        //moreNotes = notesEnum.MoveNext();
 
-        // remove this after testing is done probably
+        // TODO remove this after testing is done - skips over notes that have already been played, for when
+        // song is started in the middle
         bool after = false;
         while(!after) {
             notesEnum.MoveNext();
@@ -59,12 +67,14 @@ public class NoteManager : MonoBehaviour {
         }
     }
 
+    public static void setSongDataPath(string path) {
+        songDataPath = path;
+    }
+
     public double getTime() { return timeMs; }
 
     List<Note> loadNotes() {
-        string dcPath = Application.dataPath + "/dani_california.csv";
-
-        string[,] contents = CSVReader.parseCSV(dcPath);
+        string[,] contents = CSVReader.parseCSV(songDataPath);
 
         List<Note> workingNotes = new List<Note>();
 
