@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 using UnityEngine.Playables;
+using UnityEngine.SceneManagement;
+using System.Collections;
 
 public class NoteManager : MonoBehaviour {
 
@@ -10,10 +12,14 @@ public class NoteManager : MonoBehaviour {
     public AudioSource musicSource;
     public float startTime;
 
+    public float fadeOutTime;
+
     // Set by the menu when this scene is loaded. Only one NoteManager exists at a time, but this is not enforced yet.
     public static string songDataPath;
 
     private float timeMs;
+    private float initialMusicVolume;
+    private bool isFadingOut = false;
 
     private List<Note> notes;               // MUST BE SORTED by their spawn time 
     private IEnumerator<Note> notesEnum;
@@ -21,12 +27,15 @@ public class NoteManager : MonoBehaviour {
 
     // Use this for initialization
     void Start() {
-
         if(startTime != 0) {
             musicSource.time = startTime;
         }
 
+        musicSource.Play();
         timeMs = musicSource.time * 1000;
+        StartCoroutine(countdownMusicEnd());
+
+        initialMusicVolume = musicSource.volume;
 
         // Losing focus briefly can cause the game and audio to go out of sync
         Application.runInBackground = true;
@@ -53,17 +62,52 @@ public class NoteManager : MonoBehaviour {
     // Update is called once per frame
     void FixedUpdate() {
         timeMs += Time.deltaTime * 1000;
+        //Debug.Log("FixedUpdate Time : " + timeMs);
         //Debug.Log("total time " + timeMs + " deltatime " + Time.deltaTime * 1000);
 
         Note current = notesEnum.Current;
         if(current == null) {
-            Debug.Log("No more notes!");
+            //Debug.Log("No more notes!");
         }
 
         while(moreNotes && current != null && current.getSpawnTime() <= timeMs) {
             spawn(current);
             moreNotes = notesEnum.MoveNext();
             current = notesEnum.Current;
+        }
+
+        // Fade out for 5 seconds
+        if(isFadingOut) {
+            if(musicSource.volume <= 0) {
+                SceneManager.LoadScene("postsong");
+            }
+            else {
+                musicSource.volume -= (initialMusicVolume / 5) * Time.deltaTime;
+            }
+        }
+    }
+
+    IEnumerator countdownMusicEnd() {
+        float endTime;
+        if (fadeOutTime > 0) {
+            endTime = fadeOutTime;
+        }
+        else if (fadeOutTime > musicSource.clip.length) {
+            Debug.LogError("FadeOutTime " + fadeOutTime + " is greater than clip length " + musicSource.clip.length);
+            endTime = musicSource.clip.length;      // / audioSource.pitch * Time.timeScale;
+        }
+        else {
+            endTime = musicSource.clip.length;      // / audioSource.pitch * Time.timeScale;
+        }
+        endTime -= startTime;
+
+        yield return new WaitForSeconds(endTime);
+
+        if(fadeOutTime > 0) {
+            isFadingOut = true;
+        }
+        else {
+            SceneManager.LoadScene("postsong");
         }
     }
 
