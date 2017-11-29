@@ -6,9 +6,6 @@ public class HighScoreManager {
 
     private static HighScoreManager _instance;
 
-    private List<int> highscores;
-    private List<string> scoreNames;
-
     private const string HIGHSCORE_PREF = "highscore_";
     private const string NAME_PREF = "highscorer_";
 
@@ -17,21 +14,6 @@ public class HighScoreManager {
 
     private const int NUM_HIGHSCORES = 10;
 
-    protected HighScoreManager() {
-        highscores = loadHighscores();
-        scoreNames = loadScoreNames();
-
-        // highscores.Clear();
-        // scoreNames.Clear();
-
-        while (highscores.Count < NUM_HIGHSCORES) {
-            highscores.Add(DEFAULT_SCORE);
-        }
-        while (scoreNames.Count < NUM_HIGHSCORES) {
-            scoreNames.Add(DEFAULT_NAME);
-        }
-    }
-
     public static HighScoreManager instance() {
         if (_instance == null) {
             _instance = new HighScoreManager();
@@ -39,8 +21,11 @@ public class HighScoreManager {
         return _instance;
     }
 
-    public bool tryInsertHighscore(int score, string name) {
-        int ranking = getRanking(score);
+    public bool tryInsertHighscore(string songRef, int score, string name) {
+        List<int> highscores = loadHighscores(songRef);
+        List<string> scoreNames = loadScoreNames(songRef);
+
+        int ranking = getRanking(songRef, score);
         if(ranking != -1) {
             int prev = highscores[ranking];
             string prevName = scoreNames[ranking];
@@ -60,14 +45,15 @@ public class HighScoreManager {
                 prevName = tmpStr;
             }
 
-            saveHighscores();
-            saveScoreNames();
+            saveHighscores(songRef);
+            saveScoreNames(songRef);
             return true;
         }
         return false;
     }
 
-    public int getRanking(int score) {
+    public int getRanking(string songRef, int score) {
+        List<int> highscores = loadHighscores(songRef);
         for (int i = 0; i < highscores.Count; i++) {
             if (highscores[i] < score) {
                 return i;
@@ -76,40 +62,34 @@ public class HighScoreManager {
         return -1;
     }
 
-    public List<int> getHighscores() {
-        return highscores;
-    }
-
-    public List<string> getScoreNames() {
-        return scoreNames;
-    }
-
-    private void saveHighscores() {
+    private void saveHighscores(string songRef) {
+        List<int> highscores = loadHighscores(songRef);
         for (int i = 0; i < NUM_HIGHSCORES; i++) {
-            PlayerPrefs.SetFloat(HIGHSCORE_PREF + i, highscores[i]);
+            PlayerPrefs.SetFloat(HIGHSCORE_PREF + songRef + i, highscores[i]);
             //Debug.Log("saving score #" + i + " " + highscores[i]);
         }
     }
 
-    private void saveScoreNames() {
+    private void saveScoreNames(string songRef) {
+        List<string> scoreNames = loadScoreNames(songRef);
         for (int i = 0; i < NUM_HIGHSCORES; i++) {
-            PlayerPrefs.SetString(NAME_PREF + i, scoreNames[i]);
+            PlayerPrefs.SetString(NAME_PREF + songRef + i, scoreNames[i]);
             //Debug.Log("saving score #" + i + " " + scoreNames[i]);
         }
     }
 
-    private List<int> loadHighscores() {
+    public List<int> loadHighscores(string songRef) {
         List<int> scores = new List<int>();
         for (int i = 0; i < NUM_HIGHSCORES; i++) {
-            scores.Insert(i, PlayerPrefs.GetInt(HIGHSCORE_PREF + i, DEFAULT_SCORE));
+            scores.Insert(i, PlayerPrefs.GetInt(HIGHSCORE_PREF + songRef + i, DEFAULT_SCORE));
         }
         return scores;
     }
 
-    private List<string> loadScoreNames() {
+    public List<string> loadScoreNames(string songRef) {
         List<string> names = new List<string>();
         for (int i = 0; i < NUM_HIGHSCORES; i++) {
-            names.Insert(i, PlayerPrefs.GetString(NAME_PREF + i, DEFAULT_NAME));
+            names.Insert(i, PlayerPrefs.GetString(NAME_PREF + songRef + i, DEFAULT_NAME));
         }
         return names;
     }

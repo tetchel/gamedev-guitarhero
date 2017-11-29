@@ -10,9 +10,6 @@ public class Note {
     private int spawnTimeMs;
     private NoteColor color;
 
-    private int id;
-    private static int currentID = 0;
-
     // in seconds, how long it takes for the note to be "played" (be completely contained by the trigger) 
     // from its spawn time
     public const float spawnToNoteTime = 2.5f;
@@ -20,9 +17,6 @@ public class Note {
     public Note(NoteColor color, int spawnTimeMs) {
         this.color = color;
         this.spawnTimeMs = Mathf.RoundToInt(spawnTimeMs - spawnToNoteTime * 1000);
-
-        id = currentID;
-        currentID++;        
     }
 
     public int getSpawnTime()   { return spawnTimeMs; }

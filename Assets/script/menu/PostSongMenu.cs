@@ -5,6 +5,7 @@ using UnityEngine.SceneManagement;
 
 public class PostSongMenu : MonoBehaviour {
 
+    public Text songNameText;
     public Text scoreText;
     public Text streakText;
     public Text notesHitText;
@@ -16,6 +17,8 @@ public class PostSongMenu : MonoBehaviour {
 
     public GameObject newHighscoreDisplay;
 
+    public static string songRef;
+
     private ScoreKeeper scoreKeeper;
 
     // Use this for initialization
@@ -23,6 +26,11 @@ public class PostSongMenu : MonoBehaviour {
         newHighscoreDisplay.gameObject.SetActive(false);
 
         scoreKeeper = ScoreKeeper.instance();
+
+        if(songRef == null) {
+            Debug.LogError("SONGREF NOT SET FOR POST-SONG");
+        }
+        songNameText.text = MainMenu.getNiceSongName(songRef);
 
         int score = scoreKeeper.getScore();
         scoreText.text = "Score: " + score;
@@ -32,7 +40,7 @@ public class PostSongMenu : MonoBehaviour {
         float pct = Mathf.Round(((float)scoreKeeper.getNotesHit() / totalNotes) * 100);
         notesHitText.text = "Hit " + scoreKeeper.getNotesHit() + " / " + totalNotes + " - " + pct + "%";
 
-        int ranking = HighScoreManager.instance().getRanking(score);
+        int ranking = HighScoreManager.instance().getRanking(songRef, score);
 
         if(ranking != -1) {
             // Hide the Play Again / Exit to Menu buttons to force them to enter a name
@@ -45,12 +53,16 @@ public class PostSongMenu : MonoBehaviour {
 
     }
 
+    public static void setSongref(string songRef) {
+        PostSongMenu.songRef = songRef;
+    }
+
     public void onEnterHighscore() {
         string name = nameInput.text;
 
         //Debug.Log("The name is " + name + " and the score is " + scoreDisplay.getScore());
 
-        HighScoreManager.instance().tryInsertHighscore(scoreKeeper.getScore(), name);
+        HighScoreManager.instance().tryInsertHighscore(songRef, scoreKeeper.getScore(), name);
 
         enterHighscoreButton.interactable = false;
 
@@ -59,6 +71,11 @@ public class PostSongMenu : MonoBehaviour {
 
     public void onPlayAgain() {
         SceneManager.LoadScene("scene");
+    }
+
+    public void onViewScores() {
+        Scoreboard.setSongref(songRef);
+        SceneManager.LoadScene("scoreboard");
     }
 
     public void onExitToMenu() {

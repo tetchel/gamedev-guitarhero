@@ -14,8 +14,9 @@ public class NoteManager : MonoBehaviour {
 
     public float fadeOutTime;
 
-    // Set by the menu when this scene is loaded. Only one NoteManager exists at a time, but this is not enforced yet.
-    public static string songDataPath;
+    // Set by the menu before this scene is loaded.
+    public static string songMp3Path;
+    public static string songCsvPath;
 
     private float timeMs;
     private float initialMusicVolume;
@@ -31,7 +32,15 @@ public class NoteManager : MonoBehaviour {
             musicSource.time = startTime;
         }
 
+        //Debug.Log("Playing " + songMp3Path);
+        //Debug.Log("and reading " + songCsvPath);
+
+        // Load track
+        WWW url = new WWW(songMp3Path);
+        AudioClip clip = WWWAudioExtensions.GetAudioClip(url);
+        musicSource.clip = clip;
         musicSource.Play();
+
         timeMs = musicSource.time * 1000;
         StartCoroutine(countdownMusicEnd());
 
@@ -40,23 +49,19 @@ public class NoteManager : MonoBehaviour {
         // Losing focus briefly can cause the game and audio to go out of sync
         Application.runInBackground = true;
         
-        // TODO Remove
-        if(songDataPath == null) {
-            songDataPath = "E:/Tim/Programs/Unity/guitarhero/Assets/StreamingAssets/songdata/dani_california.csv";
-        }
         notes = loadNotes();
 
         notesEnum = notes.GetEnumerator();
-        //moreNotes = notesEnum.MoveNext();
+        moreNotes = notesEnum.MoveNext();
 
-        // TODO remove this after testing is done - skips over notes that have already been played, for when
-        // song is started in the middle
+        // skips over notes that have already been played, for when song is started in the middle
+        /*
         bool after = false;
         while(!after) {
             notesEnum.MoveNext();
             after = notesEnum.Current.getSpawnTime() >= timeMs;
             //Debug.Log("Skip note at " + notesEnum.Current.getSpawnTime());
-        }
+        }*/
     }
 
     // Update is called once per frame
@@ -111,14 +116,15 @@ public class NoteManager : MonoBehaviour {
         }
     }
 
-    public static void setSongDataPath(string path) {
-        songDataPath = path;
+    public static void setSongData(string mp3Path, string csvPath) {
+        songMp3Path = mp3Path;
+        songCsvPath = csvPath;
     }
 
     public double getTime() { return timeMs; }
 
     List<Note> loadNotes() {
-        string[,] contents = CSVReader.parseCSV(songDataPath);
+        string[,] contents = CSVReader.parseCSV(songCsvPath);
 
         List<Note> workingNotes = new List<Note>();
 

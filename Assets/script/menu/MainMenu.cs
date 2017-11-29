@@ -13,29 +13,23 @@ public class MainMenu : MonoBehaviour {
     void Start() {
         string[] songFilePaths = getSongDataFiles();
 
-        RectTransform rowRect = rowFab.GetComponent<RectTransform>(); 
+        RectTransform rowRect = rowFab.GetComponent<RectTransform>();
         // track y coordinate of next row
-        float y = 0;
+
+        float yPadding = 5;
+        float y = yPadding;
 
         for(int i = 0; i < songFilePaths.Length; i++) {
             string songRef = getSongRef(songFilePaths[i]);
-
-            // format the song name to be displayed in the menu
-            // Assumes that song words are split by '_'
-            string niceSongName = "";
-            foreach(string word in songRef.Replace('_', ' ').Split(' ')) {
-                niceSongName += char.ToUpper(word[0]);
-                niceSongName += word.Substring(1, word.Length - 1);
-                niceSongName += ' ';
-            }
-            //Debug.Log("Nice song name " + niceSongName);
     
             // Instantiate the new row into the list view
             GameObject newRow = Instantiate(rowFab, listContent.transform);
             // Position below existing rows
-            //newRow.GetComponent<RectTransform>().rect.y = y;
-            y += rowRect.rect.height;
-            newRow.GetComponentInChildren<Text>().text = niceSongName;
+            RectTransform rt = newRow.GetComponent<RectTransform>();
+            rt.anchoredPosition = new Vector2(rt.anchoredPosition.x, -y);
+
+            y += rowRect.rect.height + yPadding;
+            newRow.GetComponentInChildren<Text>().text = getNiceSongName(songRef);
 
             Button[] buttons = newRow.GetComponentsInChildren<Button>();
             Button viewScore, playSong;
@@ -56,12 +50,17 @@ public class MainMenu : MonoBehaviour {
     }
 
     public void onPlaySong(string songPath) {
-        NoteManager.setSongDataPath(songPath);
+        string songRef = getSongRef(songPath);
+        NoteManager.setSongData(getSongMp3Path(songRef), songPath);
+        // Prepare the Post Song menu by notifying it what song it will display
+        PostSongMenu.setSongref(songRef);
+
         SceneManager.LoadScene("scene");
     }
 
-    public void onViewScores(string songName) {
-        Debug.Log("We want to see the highscores for " + songName);
+    public void onViewScores(string songRef) {
+        Scoreboard.setSongref(songRef);
+        SceneManager.LoadScene("scoreboard");
     }
 
     // Format song file path into reference for use by highscore manager
@@ -75,9 +74,34 @@ public class MainMenu : MonoBehaviour {
             .Replace(".csv", "");
     }
 
-    public static string[] getSongDataFiles() {
+    // format the song name to be displayed in the menu
+    // Assumes that song words are split by '_'
+    public static string getNiceSongName(string songRef) {
+        string niceSongName = "";
+        foreach(string word in songRef.Replace('_', ' ').Split(' ')) {
+            niceSongName += char.ToUpper(word[0]);
+            niceSongName += word.Substring(1, word.Length - 1);
+            niceSongName += ' ';
+        }
+        return niceSongName;
+    }
+
+    private static string[] getSongDataFiles() {
         string path = Application.streamingAssetsPath + "/songdata/";
         return Directory.GetFiles(path, "*.csv");
+    }
+
+    private static string getSongMp3Path(string songRef) {
+        string ext;
+        if(Application.platform == RuntimePlatform.WindowsEditor || 
+            Application.platform == RuntimePlatform.WindowsPlayer) {
+            ext = "ogg";
+        }
+        else {
+            ext = "mp3";    // What is it on mac/linux?
+        }
+
+        return Application.dataPath + "/sound/music/" + songRef + "." + ext;
     }
 
     public void onQuitPressed() {
