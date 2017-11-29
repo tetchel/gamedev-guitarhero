@@ -63,7 +63,10 @@ public class ScoreKeeper : MonoBehaviour {
     private void updateUI() {
         scoreText.text  = "" + _score;
         streakText.text = "Streak: " + _streak;
-        multiplierText.text = "Multiplier: " + getStreakMultiplier(_streak);
+        int mult = getStreakMultiplier(_streak);
+
+        multiplierText.color = getStreakColor(mult);
+        multiplierText.text = "Multiplier: " + mult;
     }
 
     private static int getStreakMultiplier(int streak) {
@@ -78,6 +81,21 @@ public class ScoreKeeper : MonoBehaviour {
         }
         else {
             return 1;
+        }
+    }
+
+    private static Color getStreakColor(int mult) {
+        if(mult == 2) {
+            return Color.yellow;
+        }
+        else if(mult == 3) {
+            return Color.cyan;
+        }
+        else if(mult == 4) {
+            return Color.green;
+        }
+        else {
+            return Color.white;
         }
     }
 
