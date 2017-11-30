@@ -8,43 +8,88 @@ public class NoteManager : MonoBehaviour {
 
     public GameObject greenNotePrefab, redNotePrefab, yellowNotePrefab, blueNotePrefab;
     public float noteSpawnYPos;
+    public float startTime = 0;
 
-    public AudioSource musicSource;
-    public float startTime;
+    // One music source per song exists in the scene. This is a crap way of handling the multiple tracks. I tried
+    // the proper way below (line ~50) but I could not get it to work reliably, so this is my workaround.
+    public AudioSource[] musicSources;
 
-    public float fadeOutTime;
+    //public float fadeOutTime;
 
     // Set by the menu before this scene is loaded.
     public static string songMp3Path;
     public static string songCsvPath;
 
     private float timeMs;
-    private float initialMusicVolume;
-    private bool isFadingOut = false;
+    //private float initialMusicVolume;
+    //private bool isFadingOut;
 
     private List<Note> notes;               // MUST BE SORTED by their spawn time 
     private IEnumerator<Note> notesEnum;
-    private bool moreNotes = true;
+    private bool moreNotes;
 
     // Use this for initialization
     void Start() {
-        if(startTime != 0) {
-            musicSource.time = startTime;
-        }
 
         //Debug.Log("Playing " + songMp3Path);
         //Debug.Log("and reading " + songCsvPath);
 
+        if(songMp3Path == null || songCsvPath == null) {
+            // Disaster!
+            Debug.LogError("SONG DATA WAS NOT SET!");
+            Debug.LogError("mp3Path: " + songMp3Path);
+            Debug.LogError("csvPath: " + songCsvPath);
+            SceneManager.LoadScene("mainmenu");
+
+            // for testing only
+            //songMp3Path = "E:/Tim/Programs/Unity/guitarhero/Assets/sound/music/twinkle_twinkle.ogg";
+            //songCsvPath = "E:/Tim/Programs/Unity/guitarhero/Assets/StreamingAssets/songdata/twinkle_twinkle.csv";
+        }
+
+        /*
         // Load track
+        // NONE of this seems to work reliably. It never works on Dani and after one failure, all tracks will
+        // fail until the game is restarted. No error is shown or anything, just the clip.length == 0 
+        // and it will not play.
+        // https://forum.unity.com/threads/streaming-audio-zero-length-and-no-isplaying.9409/
+        // https://issuetracker.unity3d.com/issues/streaming-audio-is-broken
         WWW url = new WWW(songMp3Path);
-        AudioClip clip = WWWAudioExtensions.GetAudioClip(url);
+        while(url.isDone) {
+            // wait
+        }
+        AudioClip clip = url.GetAudioClip();
+        //AudioClip clip = WWWAudioExtensions.GetAudioClip(url);
+        clip.LoadAudioData();
         musicSource.clip = clip;
+        if(clip == null) {
+            Debug.LogError("NULL CLIP");
+        }
+        else if(clip.length == 0) {
+            Debug.LogError("0-length clip. " + songMp3Path);
+        }
+        */
+
+        // workaround - have a GO in the scene for each song, and load the one whose name matches the track we want
+        AudioSource musicSource = null;
+        foreach(AudioSource src in musicSources) {
+            if(src.gameObject.name.Contains(MainMenu.getSongRef(songCsvPath))) {
+                // This is the one we want to play
+                musicSource = src;
+            }
+        }
+
+        if(musicSource == null) {
+            Debug.LogError("musicSource is NULL. No GameObject matched songref for " + songCsvPath);
+        }
+
+        musicSource.time = startTime;
+        //musicSource.PlayScheduled(AudioSettings.dspTime);
         musicSource.Play();
 
         timeMs = musicSource.time * 1000;
-        StartCoroutine(countdownMusicEnd());
+        StartCoroutine(countdownMusicEnd(musicSource.clip.length));
 
-        initialMusicVolume = musicSource.volume;
+        //initialMusicVolume = musicSource.volume;
 
         // Losing focus briefly can cause the game and audio to go out of sync
         Application.runInBackground = true;
@@ -81,39 +126,50 @@ public class NoteManager : MonoBehaviour {
             current = notesEnum.Current;
         }
 
+        /*
         // Fade out for 5 seconds
         if(isFadingOut) {
             if(musicSource.volume <= 0) {
+                musicSource.volume = initialMusicVolume;
                 SceneManager.LoadScene("postsong");
             }
             else {
                 musicSource.volume -= (initialMusicVolume / 5) * Time.deltaTime;
             }
         }
+        */
     }
 
-    IEnumerator countdownMusicEnd() {
-        float endTime;
+    IEnumerator countdownMusicEnd(float length) {
+        float endTime = length;
+        /*
         if (fadeOutTime > 0) {
             endTime = fadeOutTime;
         }
         else if (fadeOutTime > musicSource.clip.length) {
             Debug.LogError("FadeOutTime " + fadeOutTime + " is greater than clip length " + musicSource.clip.length);
             endTime = musicSource.clip.length;      // / audioSource.pitch * Time.timeScale;
-        }
+        }        
         else {
             endTime = musicSource.clip.length;      // / audioSource.pitch * Time.timeScale;
         }
+        */
+
         endTime -= startTime;
+        if(endTime == 0) {
+            Debug.LogError("EndTime was 0. StartTime was " + startTime);
+        }
 
         yield return new WaitForSeconds(endTime);
-
+        SceneManager.LoadScene("postsong");
+        /*
         if(fadeOutTime > 0) {
             isFadingOut = true;
         }
         else {
             SceneManager.LoadScene("postsong");
         }
+        */
     }
 
     public static void setSongData(string mp3Path, string csvPath) {

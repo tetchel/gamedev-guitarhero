@@ -50,7 +50,6 @@ public class PostSongMenu : MonoBehaviour {
 
             highscoreNotify.text = "Your score is the " + HighScoreManager.ordinal(ranking + 1) + " best!";
         }
-
     }
 
     public static void setSongref(string songRef) {

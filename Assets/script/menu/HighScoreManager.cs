@@ -45,8 +45,8 @@ public class HighScoreManager {
                 prevName = tmpStr;
             }
 
-            saveHighscores(songRef);
-            saveScoreNames(songRef);
+            saveHighscores(songRef, highscores);
+            saveScoreNames(songRef, scoreNames);
             return true;
         }
         return false;
@@ -62,16 +62,14 @@ public class HighScoreManager {
         return -1;
     }
 
-    private void saveHighscores(string songRef) {
-        List<int> highscores = loadHighscores(songRef);
+    private void saveHighscores(string songRef, List<int> highscores) {
         for (int i = 0; i < NUM_HIGHSCORES; i++) {
-            PlayerPrefs.SetFloat(HIGHSCORE_PREF + songRef + i, highscores[i]);
+            PlayerPrefs.SetInt(HIGHSCORE_PREF + songRef + i, highscores[i]);
             //Debug.Log("saving score #" + i + " " + highscores[i]);
         }
     }
 
-    private void saveScoreNames(string songRef) {
-        List<string> scoreNames = loadScoreNames(songRef);
+    private void saveScoreNames(string songRef, List<string> scoreNames) {
         for (int i = 0; i < NUM_HIGHSCORES; i++) {
             PlayerPrefs.SetString(NAME_PREF + songRef + i, scoreNames[i]);
             //Debug.Log("saving score #" + i + " " + scoreNames[i]);
@@ -95,7 +93,6 @@ public class HighScoreManager {
     }
 
     public static string ordinal(int i) {
-        // only handle 1-10
         if (i % 10 == 1) {
             return i + "st";
         }
