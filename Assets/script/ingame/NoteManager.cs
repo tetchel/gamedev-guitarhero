@@ -11,13 +11,15 @@ public class NoteManager : MonoBehaviour {
     public float startTime = 0;
 
     // One music source per song exists in the scene. This is a crap way of handling the multiple tracks. I tried
-    // the proper way below (line ~50) but I could not get it to work reliably, so this is my workaround.
+    // the proper way below (line ~55) but I could not get it to work reliably, so this is my workaround.
     public AudioSource[] musicSources;
+
+    public Pauser pauser;
 
     //public float fadeOutTime;
 
     // Set by the menu before this scene is loaded.
-    public static string songMp3Path;
+    //public static string songMp3Path;
     public static string songCsvPath;
 
     private float timeMs;
@@ -26,31 +28,30 @@ public class NoteManager : MonoBehaviour {
 
     private List<Note> notes;               // MUST BE SORTED by their spawn time 
     private IEnumerator<Note> notesEnum;
-    private bool moreNotes;
+    private bool moreNotes = true;
 
     // Use this for initialization
     void Start() {
-
         //Debug.Log("Playing " + songMp3Path);
         //Debug.Log("and reading " + songCsvPath);
 
-        if(songMp3Path == null || songCsvPath == null) {
+        if(songCsvPath == null) {
             // Disaster!
             Debug.LogError("SONG DATA WAS NOT SET!");
-            Debug.LogError("mp3Path: " + songMp3Path);
+            //Debug.LogError("mp3Path: " + songMp3Path);
             Debug.LogError("csvPath: " + songCsvPath);
             SceneManager.LoadScene("mainmenu");
 
             // for testing only
             //songMp3Path = "E:/Tim/Programs/Unity/guitarhero/Assets/sound/music/twinkle_twinkle.ogg";
-            //songCsvPath = "E:/Tim/Programs/Unity/guitarhero/Assets/StreamingAssets/songdata/twinkle_twinkle.csv";
+            songCsvPath = "E:/Tim/Programs/Unity/guitarhero/Assets/StreamingAssets/songdata/twinkle_twinkle.csv";
         }
 
         /*
         // Load track
         // NONE of this seems to work reliably. It never works on Dani and after one failure, all tracks will
         // fail until the game is restarted. No error is shown or anything, just the clip.length == 0 
-        // and it will not play.
+        // and it will not play. Maybe due to my own failure, maybe due to this bug:
         // https://forum.unity.com/threads/streaming-audio-zero-length-and-no-isplaying.9409/
         // https://issuetracker.unity3d.com/issues/streaming-audio-is-broken
         WWW url = new WWW(songMp3Path);
@@ -81,6 +82,8 @@ public class NoteManager : MonoBehaviour {
         if(musicSource == null) {
             Debug.LogError("musicSource is NULL. No GameObject matched songref for " + songCsvPath);
         }
+
+        pauser.setMusicSource(musicSource);
 
         musicSource.time = startTime;
         //musicSource.PlayScheduled(AudioSettings.dspTime);
@@ -116,10 +119,7 @@ public class NoteManager : MonoBehaviour {
         //Debug.Log("total time " + timeMs + " deltatime " + Time.deltaTime * 1000);
 
         Note current = notesEnum.Current;
-        if(current == null) {
-            //Debug.Log("No more notes!");
-        }
-
+        //Debug.Log("it's " + timeMs + " and the next note is at " + current.getSpawnTime());
         while(moreNotes && current != null && current.getSpawnTime() <= timeMs) {
             spawn(current);
             moreNotes = notesEnum.MoveNext();
@@ -140,6 +140,11 @@ public class NoteManager : MonoBehaviour {
         */
     }
 
+    void OnDestroy() {
+        StopAllCoroutines();
+        //Debug.Log("Note Manager destroyed");
+    }
+
     IEnumerator countdownMusicEnd(float length) {
         float endTime = length;
         /*
@@ -157,6 +162,7 @@ public class NoteManager : MonoBehaviour {
 
         endTime -= startTime;
         if(endTime == 0) {
+            // manifestation of failing to load the track properly
             Debug.LogError("EndTime was 0. StartTime was " + startTime);
         }
 
@@ -172,9 +178,10 @@ public class NoteManager : MonoBehaviour {
         */
     }
 
-    public static void setSongData(string mp3Path, string csvPath) {
-        songMp3Path = mp3Path;
+    public static void setSongData(/*string mp3Path,*/ string csvPath) {
+        //songMp3Path = mp3Path;
         songCsvPath = csvPath;
+        //Debug.Log("songCsvPath set to " + csvPath);
     }
 
     public double getTime() { return timeMs; }

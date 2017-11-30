@@ -51,7 +51,7 @@ public class MainMenu : MonoBehaviour {
 
     public void onPlaySong(string songPath) {
         string songRef = getSongRef(songPath);
-        NoteManager.setSongData(getSongMp3Path(songRef), songPath);
+        NoteManager.setSongData(/*getSongMp3Path(songRef),*/ songPath);
         // Prepare the Post Song menu by notifying it what song it will display
         PostSongMenu.setSongref(songRef);
 
@@ -90,7 +90,8 @@ public class MainMenu : MonoBehaviour {
         string path = Application.streamingAssetsPath + "/songdata/";
         return Directory.GetFiles(path, "*.csv");
     }
-
+    
+    /*
     private static string getSongMp3Path(string songRef) {
         string ext;
         if(Application.platform == RuntimePlatform.WindowsEditor || 
@@ -102,6 +103,11 @@ public class MainMenu : MonoBehaviour {
         }
 
         return Application.dataPath + "/sound/music/" + songRef + "." + ext;
+    }
+    */
+
+    public void onHowToPlay() {
+        SceneManager.LoadScene("howtoplay");
     }
 
     public void onQuitPressed() {
